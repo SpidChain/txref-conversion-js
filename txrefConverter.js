@@ -1,23 +1,23 @@
-var bech32 = require('./bech32');
-var promisifiedRequests = require('./promisifiedRequests');
+const bech32 = require('./bech32');
+const promisifiedRequests = require('./promisifiedRequests');
 
-let MAGIC_BTC_MAINNET = 0x03;
-let MAGIC_BTC_TESTNET = 0x06;
+const MAGIC_BTC_MAINNET = 0x03;
+const MAGIC_BTC_TESTNET = 0x06;
 
-let TXREF_BECH32_HRP_MAINNET = "tx";
-let TXREF_BECH32_HRP_TESTNET = "txtest";
+const TXREF_BECH32_HRP_MAINNET = "tx";
+const TXREF_BECH32_HRP_TESTNET = "txtest";
 
-let CHAIN_MAINNET = "mainnet";
-let CHAIN_TESTNET = "testnet";
+const CHAIN_MAINNET = "mainnet";
+const CHAIN_TESTNET = "testnet";
 
 
 
-var txrefEncode = function (chain, blockHeight, txPos) {
-  let magic = chain === CHAIN_MAINNET ? MAGIC_BTC_MAINNET : MAGIC_BTC_TESTNET;
-  let prefix = chain === CHAIN_MAINNET ? TXREF_BECH32_HRP_MAINNET : TXREF_BECH32_HRP_TESTNET;
-  let nonStandard = chain != CHAIN_MAINNET;
+const txrefEncode = (chain, blockHeight, txPos) => {
+  const magic = chain === CHAIN_MAINNET ? MAGIC_BTC_MAINNET : MAGIC_BTC_TESTNET;
+  const prefix = chain === CHAIN_MAINNET ? TXREF_BECH32_HRP_MAINNET : TXREF_BECH32_HRP_TESTNET;
+  const nonStandard = chain != CHAIN_MAINNET;
 
-  var shortId;
+  let shortId;
   shortId = nonStandard ? [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] :
     [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 
@@ -59,10 +59,10 @@ var txrefEncode = function (chain, blockHeight, txPos) {
     shortId[7] |= ((txPos & 0x1F00) >> 8);
   }
 
-  let result = bech32.encode(prefix, shortId);
+  const result = bech32.encode(prefix, shortId);
 
-  let breakIndex = prefix.length + 1;
-  let finalResult = result.substring(0, breakIndex) + "-" +
+  const breakIndex = prefix.length + 1;
+  const finalResult = result.substring(0, breakIndex) + "-" +
     result.substring(breakIndex, breakIndex + 4) + "-" +
     result.substring(breakIndex + 4, breakIndex + 8) + "-" +
     result.substring(breakIndex + 8, breakIndex + 12) + "-" +
@@ -71,10 +71,10 @@ var txrefEncode = function (chain, blockHeight, txPos) {
 };
 
 
-var txrefDecode = function (bech32Tx) {
-  let stripped = bech32Tx.replace(/-/g, '');
+const txrefDecode = (bech32Tx) => {
+  const stripped = bech32Tx.replace(/-/g, '');
 
-  let result = bech32.decode(stripped);
+  const result = bech32.decode(stripped);
   if (result === null) {
     return null;
   }
@@ -84,13 +84,13 @@ var txrefDecode = function (bech32Tx) {
   let chainMarker = buf[0];
   let nonStandard = chainMarker != MAGIC_BTC_MAINNET;
 
-  var bStart = (buf[1] >> 1) |
+  let bStart = (buf[1] >> 1) |
     (buf[2] << 4) |
     (buf[3] << 9) |
     (buf[4] << 14);
 
-  var blockHeight = 0;
-  var blockIndex = 0;
+  let blockHeight = 0;
+  let blockIndex = 0;
 
   if (nonStandard) {
     blockHeight = bStart | (buf[5] << 19);
@@ -107,7 +107,7 @@ var txrefDecode = function (bech32Tx) {
     blockIndex |= (buf[7] << 8);
   }
 
-  let chain = chainMarker === MAGIC_BTC_MAINNET ? CHAIN_MAINNET : CHAIN_TESTNET;
+  const chain = chainMarker === MAGIC_BTC_MAINNET ? CHAIN_MAINNET : CHAIN_TESTNET;
 
   return {
     "blockHeight": blockHeight,
@@ -116,7 +116,7 @@ var txrefDecode = function (bech32Tx) {
   };
 };
 
-var parseTxDetails = function (txData, chain, txid) {
+const parseTxDetails = (txData, chain, txid) => {
   let blockHash = txData.block_hash;
   let blockHeight = txData.block_height;
   let blockIndex = txData.block_index;
@@ -151,9 +151,9 @@ var parseTxDetails = function (txData, chain, txid) {
   };
 };
 
-function getTxDetails(txid, chain) {
+const getTxDetails = (txid, chain) => {
 
-  var theUrl;
+  let theUrl;
   if (chain === CHAIN_MAINNET) {
     theUrl = `https://api.blockcypher.com/v1/btc/main/txs/${txid}?limit=500`;
   } else {
@@ -171,10 +171,10 @@ function getTxDetails(txid, chain) {
 }
 
 
-var txidToTxref = function (txid, chain) {
+const txidToTxref = (txid, chain) => {
   return getTxDetails(txid, chain)
     .then(data => {
-      var result = txrefEncode(chain, data.blockHeight, data.blockIndex);
+      const result = txrefEncode(chain, data.blockHeight, data.blockIndex);
       return result
     }, error => {
       console.error(error);
@@ -183,7 +183,7 @@ var txidToTxref = function (txid, chain) {
 }
 
 
-var txrefToTxid = function (txref) {
+const txrefToTxid = (txref) => {
   return new Promise((resolve, reject) => {
 
     let blockLocation = txrefDecode(txref);
@@ -194,7 +194,7 @@ var txrefToTxid = function (txref) {
     let blockHeight = blockLocation.blockHeight;
     let blockIndex = blockLocation.blockIndex;
     let chain = blockLocation.chain;
-    var theUrl;
+    let theUrl;
     if (chain === CHAIN_MAINNET) {
       theUrl = `https://api.blockcypher.com/v1/btc/main/blocks/${blockHeight}?txstart=${blockIndex}&limit=1`;
     } else {
@@ -215,10 +215,10 @@ var txrefToTxid = function (txref) {
   });
 };
 
-var txDetailsFromTxid = function (txid, chain) {
+const txDetailsFromTxid = (txid, chain) => {
   return getTxDetails(txid, chain)
     .then(txDetails => {
-      var txref = txrefEncode(chain, txDetails.blockHeight, txDetails.blockIndex);
+      const txref = txrefEncode(chain, txDetails.blockHeight, txDetails.blockIndex);
       txDetails.txid = txid;
       txDetails.txref = txref;
       txDetails.chain = chain;
@@ -229,7 +229,7 @@ var txDetailsFromTxid = function (txid, chain) {
     });
 };
 
-var txDetailsFromTxref = function (txref) {
+const txDetailsFromTxref = (txref) => {
   return txrefToTxid(txref)
     .then(results => {
       let txid = results.txid;
