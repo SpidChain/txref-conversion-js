@@ -1,5 +1,3 @@
-var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-
 let request = obj => {
   return new Promise((resolve, reject) => {
     let request = new XMLHttpRequest();
